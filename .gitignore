@@ -1,9 +1,9 @@
+# Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
 *$py.class
 *.so
 .Python
-env/
 build/
 develop-eggs/
 dist/
@@ -15,13 +15,40 @@ lib64/
 parts/
 sdist/
 var/
+wheels/
 *.egg-info/
 .installed.cfg
 *.egg
+
+# Streamlit
+.streamlit/secrets.toml
+
+# Environments
 .env
 .venv
+env/
 venv/
 ENV/
-.streamlit/secrets.toml
+env.bak/
+venv.bak/
+
+# Temp and output directories
 output/
 temp/
+.temp/
+tmp/
+
+# OS specific
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Editor specific
+.idea/
+.vscode/
+*.swp
+*.swo
