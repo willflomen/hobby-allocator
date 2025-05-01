@@ -19,6 +19,26 @@ import sys
 # App version - helpful for troubleshooting
 APP_VERSION = "1.0.0"
 
+# First, check for required dependencies
+try:
+    import pulp
+    PULP_AVAILABLE = True
+except ImportError:
+    PULP_AVAILABLE = False
+    st.error("""
+    ### Error: PuLP library not found
+    
+    This application requires the PuLP optimization library, which seems to be missing.
+    
+    If you're running this locally, please install it with:
+    ```
+    pip install pulp==2.7.0
+    ```
+    
+    If you're seeing this on Streamlit Cloud, please contact the administrator.
+    """)
+    st.stop()
+
 # Set page configuration
 st.set_page_config(
     page_title="Camp Northland Hobby Allocator",
@@ -693,6 +713,10 @@ if not st.session_state.has_run:
                     choice_data = extract_choice_data_from_log(output_lines)
                     
                     # Store in session state
+                    # Extract choice data from output log
+                    choice_data = extract_choice_data_from_log(output_lines)
+                    
+                    # Store in session state
                     st.session_state.choice_distribution = choice_data
                     
                     # Get satisfaction score
@@ -760,8 +784,21 @@ if not st.session_state.has_run:
                             os.unlink(file_path)
                         except:
                             pass
-
-     # Create a results section
+else:
+    # Display results section
+    st.success("✅ Allocation completed successfully!")
+    
+    # Add Start New Allocation button at the top of results
+    if st.button("Start New Allocation", key="results_new_allocation", use_container_width=True):
+        # Reset session state
+        keys_to_keep = ['temp_dir', 'last_activity']
+        for key in list(st.session_state.keys()):
+            if key not in keys_to_keep:
+                del st.session_state[key]
+        st.session_state.has_run = False
+        st.rerun()
+    
+    # Create a results section
     st.header("Allocation Results")
     
     # Get choice data from session state
@@ -793,7 +830,7 @@ if not st.session_state.has_run:
     metrics_cols = st.columns(4)
     if satisfaction_score is not None:
         metrics_cols[0].metric("Overall Satisfaction", f"{satisfaction_score:.1f}%", 
-                             help="Percentage of campers assigned to their top 3 choices")
+                            help="Percentage of campers assigned to their top 3 choices")
     
     if choice_data and 1 in choice_data:
         first_count, first_pct = choice_data[1]
@@ -909,7 +946,7 @@ if not st.session_state.has_run:
         if 'Restricted' in summary_df.columns:
             # Add info about what "Restricted" means
             st.info("Note: 'Restricted' hobbies only allow pre-assigned campers. " +
-                   "Non-restricted hobbies adjust their capacity based on pre-assignments.")
+                  "Non-restricted hobbies adjust their capacity based on pre-assignments.")
         
         st.dataframe(summary_df, use_container_width=True)
     
@@ -985,77 +1022,78 @@ if not st.session_state.has_run:
             else:
                 file_tabs.append(f"{name} Files (0)")
         
-        download_tabs = st.tabs(file_tabs)
-        
-        # Excel files
-        with download_tabs[0]:
-            if ".xlsx" in grouped_files:
-                cols = st.columns(3)
-                for i, (file_name, file_path) in enumerate(sorted(grouped_files[".xlsx"])):
-                    try:
-                        # Just read the file directly (no anonymization by default)
-                        with open(file_path, "rb") as file:
-                            file_data = file.read()
-                                
-                        cols[i % 3].download_button(
-                            label=file_name,
-                            data=file_data,
-                            file_name=file_name,
-                            mime=file_types[".xlsx"][1],
-                            key=f"xlsx_{i}",  # Add unique key
-                            use_container_width=True
-                        )
-                    except Exception as e:
-                        cols[i % 3].error(f"Error with file {file_name}: {str(e)}")
-            else:
-                st.info("No Excel files available for download.")
-        
-        # CSV files
-        with download_tabs[1]:
-            if ".csv" in grouped_files:
-                cols = st.columns(3)
-                for i, (file_name, file_path) in enumerate(sorted(grouped_files[".csv"])):
-                    try:
-                        # Just read the file directly (no anonymization by default)
-                        with open(file_path, "rb") as file:
-                            file_data = file.read()
-                                
-                        cols[i % 3].download_button(
-                            label=file_name,
-                            data=file_data,
-                            file_name=file_name,
-                            mime=file_types[".csv"][1],
-                            key=f"csv_{i}",  # Add unique key
-                            use_container_width=True
-                        )
-                    except Exception as e:
-                        cols[i % 3].error(f"Error with file {file_name}: {str(e)}")
-            else:
-                st.info("No CSV files available for download.")
-        
-        # Image files
-        with download_tabs[2]:
-            if ".png" in grouped_files:
-                cols = st.columns(3)
-                for i, (file_name, file_path) in enumerate(sorted(grouped_files[".png"])):
-                    try:
-                        with open(file_path, "rb") as file:
-                            file_data = file.read()
-                            # Show a thumbnail
-                            cols[i % 3].image(file_data, caption=file_name, width=200)
-                            # Add download button
+        if file_tabs:  # Only create tabs if there are files
+            download_tabs = st.tabs(file_tabs)
+            
+            # Excel files
+            with download_tabs[0]:
+                if ".xlsx" in grouped_files:
+                    cols = st.columns(3)
+                    for i, (file_name, file_path) in enumerate(sorted(grouped_files[".xlsx"])):
+                        try:
+                            with open(file_path, "rb") as file:
+                                file_data = file.read()
+                                    
                             cols[i % 3].download_button(
-                                label=f"Download {file_name}",
+                                label=file_name,
                                 data=file_data,
                                 file_name=file_name,
-                                mime=file_types[".png"][1],
-                                key=f"png_{i}",  # Add unique key
+                                mime=file_types[".xlsx"][1],
+                                key=f"xlsx_{i}",  # Add unique key
                                 use_container_width=True
                             )
-                    except Exception as e:
-                        cols[i % 3].error(f"Error with file {file_name}: {str(e)}")
-            else:
-                st.info("No image files available for download.")
+                        except Exception as e:
+                            cols[i % 3].error(f"Error with file {file_name}: {str(e)}")
+                else:
+                    st.info("No Excel files available for download.")
+            
+            # CSV files
+            with download_tabs[1]:
+                if ".csv" in grouped_files:
+                    cols = st.columns(3)
+                    for i, (file_name, file_path) in enumerate(sorted(grouped_files[".csv"])):
+                        try:
+                            with open(file_path, "rb") as file:
+                                file_data = file.read()
+                                    
+                            cols[i % 3].download_button(
+                                label=file_name,
+                                data=file_data,
+                                file_name=file_name,
+                                mime=file_types[".csv"][1],
+                                key=f"csv_{i}",  # Add unique key
+                                use_container_width=True
+                            )
+                        except Exception as e:
+                            cols[i % 3].error(f"Error with file {file_name}: {str(e)}")
+                else:
+                    st.info("No CSV files available for download.")
+            
+            # Image files
+            with download_tabs[2]:
+                if ".png" in grouped_files:
+                    cols = st.columns(3)
+                    for i, (file_name, file_path) in enumerate(sorted(grouped_files[".png"])):
+                        try:
+                            with open(file_path, "rb") as file:
+                                file_data = file.read()
+                                # Show a thumbnail
+                                cols[i % 3].image(file_data, caption=file_name, width=200)
+                                # Add download button
+                                cols[i % 3].download_button(
+                                    label=f"Download {file_name}",
+                                    data=file_data,
+                                    file_name=file_name,
+                                    mime=file_types[".png"][1],
+                                    key=f"png_{i}",  # Add unique key
+                                    use_container_width=True
+                                )
+                        except Exception as e:
+                            cols[i % 3].error(f"Error with file {file_name}: {str(e)}")
+                else:
+                    st.info("No image files available for download.")
+    else:
+        st.info("No files available for download.")
     
     # Ensure we clean up the output directory when done
     if st.session_state.output_dir and os.path.exists(st.session_state.output_dir):
@@ -1074,9 +1112,6 @@ st.sidebar.info(
     "It helps automatically assign campers to their preferred hobby activities "
     "while optimizing overall satisfaction and meeting constraints."
 )
-
-# Note: Removed duplicate "Start New Allocation" button from sidebar
-# Only showing it at the top of the results page
 
 st.sidebar.title("Help")
 st.sidebar.markdown(
