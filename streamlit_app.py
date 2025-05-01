@@ -365,9 +365,9 @@ def create_choice_distribution_chart(choice_data):
 
 # Check if the main_updated.py script exists
 def check_required_files():
-    script_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "main_updated.py")
+    script_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "main_simple.py")
     if not os.path.exists(script_path):
-        st.error("Critical error: Required script 'main_updated.py' not found. Please ensure it's in the same directory as this app.")
+        st.error("Critical error: Required script 'main_simple.py' not found. Please ensure it's in the same directory as this app.")
         st.stop()
 
 # Initialize session state for temporary directory management
@@ -651,7 +651,7 @@ if not st.session_state.has_run:
             
             # Get the path to the main_updated.py script
             script_dir = os.path.dirname(os.path.abspath(__file__))
-            main_script_path = os.path.join(script_dir, "main_updated.py")
+            main_script_path = os.path.join(script_dir, "main_simple.py")
             
             # Build command
             cmd = ["python", main_script_path, 
