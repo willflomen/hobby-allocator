@@ -1,4 +1,26 @@
+import sys
+import subprocess
+
+def ensure_pulp_installed():
+    try:
+        import pulp
+        return True
+    except ImportError:
+        print("PuLP not found. Installing PuLP 2.6.0...")
+        try:
+            subprocess.check_call([sys.executable, "-m", "pip", "install", "pulp==2.6.0"])
+            return True
+        except Exception as e:
+            print(f"Failed to install PuLP: {e}")
+            return False
+
+# Try to ensure PuLP is installed
+if not ensure_pulp_installed():
+    print("ERROR: Unable to install PuLP. Cannot continue.")
+    sys.exit(1)
+
 import pulp
+
 import pandas as pd
 import numpy as np
 import os
