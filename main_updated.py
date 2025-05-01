@@ -1,15 +1,55 @@
 import sys
 import subprocess
+import os
+
+# Add user site-packages to the PATH
+import site
+sys.path.append(site.USER_SITE)
+# Also add the local bin directory where pulptest was installed
+home_dir = os.path.expanduser("~")
+local_bin = os.path.join(home_dir, ".local", "bin")
+if os.path.exists(local_bin) and local_bin not in os.environ.get("PATH", ""):
+    os.environ["PATH"] = local_bin + ":" + os.environ.get("PATH", "")
 
 def ensure_pulp_installed():
     try:
         import pulp
+        print(f"Successfully imported PuLP version {pulp.__version__}")
         return True
     except ImportError:
         print("PuLP not found. Installing PuLP 2.6.0...")
         try:
             subprocess.check_call([sys.executable, "-m", "pip", "install", "pulp==2.6.0"])
-            return True
+            
+            # Add the user site-packages directory to sys.path again after installation
+            import site
+            import importlib
+            
+            # Try to locate where pip installed the package
+            user_site = site.USER_SITE
+            if user_site not in sys.path:
+                sys.path.insert(0, user_site)
+            
+            # Force reload of site module to update sys.path
+            importlib.reload(site)
+            
+            # Also add .local/bin to PATH
+            home_dir = os.path.expanduser("~")
+            local_bin = os.path.join(home_dir, ".local", "bin")
+            if os.path.exists(local_bin):
+                os.environ["PATH"] = local_bin + ":" + os.environ.get("PATH", "")
+            
+            print(f"sys.path now includes: {sys.path}")
+            
+            # Try to import pulp again
+            try:
+                import pulp
+                print(f"Successfully imported PuLP version {pulp.__version__}")
+                return True
+            except ImportError as e:
+                print(f"Still can't import PuLP after modifying path: {e}")
+                return False
+                
         except Exception as e:
             print(f"Failed to install PuLP: {e}")
             return False
@@ -19,7 +59,9 @@ if not ensure_pulp_installed():
     print("ERROR: Unable to install PuLP. Cannot continue.")
     sys.exit(1)
 
-import pulp
+import pulp  # Now it should be available
+
+# Rest of your code follows...
 
 import pandas as pd
 import numpy as np
