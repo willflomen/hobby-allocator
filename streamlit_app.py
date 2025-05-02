@@ -1,5 +1,39 @@
 import streamlit as st
+import sys
 import os
+
+# Make sure the solver binaries can be found
+os.environ["PATH"] = os.environ.get("PATH", "") + ":/home/appuser/.local/bin"
+
+# Check PuLP installation
+try:
+    import pulp
+    solver_available = False
+    
+    # Check for solvers
+    try:
+        solver = pulp.PULP_CBC_CMD()
+        solver_available = True
+        st.sidebar.success("CBC Solver available!")
+    except:
+        try:
+            solver = pulp.GLPK_CMD()
+            solver_available = True
+            st.sidebar.warning("Using GLPK Solver (fallback)")
+        except:
+            st.sidebar.error("No solvers available! The app may not work correctly.")
+    
+    st.sidebar.info(f"PuLP version: {pulp.__version__}")
+    
+except ImportError:
+    st.error("""
+    ### Error: PuLP library not found
+    
+    This application requires the PuLP optimization library, which is missing.
+    Please check the deployment configuration.
+    """)
+    st.stop()
+
 import subprocess
 import pandas as pd
 import numpy as np
@@ -14,30 +48,9 @@ import re
 import matplotlib.pyplot as plt
 import atexit
 import shutil
-import sys
 
 # App version - helpful for troubleshooting
 APP_VERSION = "1.0.0"
-
-# First, check for required dependencies
-try:
-    import pulp
-    PULP_AVAILABLE = True
-except ImportError:
-    PULP_AVAILABLE = False
-    st.error("""
-    ### Error: PuLP library not found
-    
-    This application requires the PuLP optimization library, which seems to be missing.
-    
-    If you're running this locally, please install it with:
-    ```
-    pip install pulp==2.7.0
-    ```
-    
-    If you're seeing this on Streamlit Cloud, please contact the administrator.
-    """)
-    st.stop()
 
 # Set page configuration
 st.set_page_config(
