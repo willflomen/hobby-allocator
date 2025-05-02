@@ -2,6 +2,14 @@ import streamlit as st
 import sys
 import os
 
+# Set page configuration - MUST BE THE FIRST STREAMLIT COMMAND
+st.set_page_config(
+    page_title="Camp Northland Hobby Allocator",
+    page_icon="📊",
+    layout="wide",
+    initial_sidebar_state="expanded"
+)
+
 # Make sure the solver binaries can be found
 os.environ["PATH"] = os.environ.get("PATH", "") + ":/home/appuser/.local/bin"
 
@@ -34,6 +42,7 @@ except ImportError:
     """)
     st.stop()
 
+# Rest of your imports
 import subprocess
 import pandas as pd
 import numpy as np
@@ -49,16 +58,11 @@ import matplotlib.pyplot as plt
 import atexit
 import shutil
 
+# Rest of your code remains the same...
 # App version - helpful for troubleshooting
 APP_VERSION = "1.0.0"
 
-# Set page configuration
-st.set_page_config(
-    page_title="Camp Northland Hobby Allocator",
-    page_icon="📊",
-    layout="wide",
-    initial_sidebar_state="expanded"
-)
+
 
 # Helper functions - defined at the top so they're available throughout the file
 def choice_to_word(choice):
