@@ -13,3 +13,11 @@ server
 enableCORS = false
 enableXsrfProtection = true
 maxUploadSize = 200
+
+[server]
+enableCORS = false
+enableXsrfProtection = true
+maxUploadSize = 200
+
+[browser]
+serverAddress = "localhost"
