@@ -1,8 +1,6 @@
 import streamlit as st
-import sys
-import os
 
-# Set page configuration - MUST BE THE FIRST STREAMLIT COMMAND
+# MUST be the first Streamlit command
 st.set_page_config(
     page_title="Camp Northland Hobby Allocator",
     page_icon="📊",
@@ -10,39 +8,11 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Make sure the solver binaries can be found
-os.environ["PATH"] = os.environ.get("PATH", "") + ":/home/appuser/.local/bin"
-
-# Check PuLP installation
-try:
-    import pulp
-    solver_available = False
-    
-    # Check for solvers
-    try:
-        solver = pulp.PULP_CBC_CMD()
-        solver_available = True
-        st.sidebar.success("CBC Solver available!")
-    except:
-        try:
-            solver = pulp.GLPK_CMD()
-            solver_available = True
-            st.sidebar.warning("Using GLPK Solver (fallback)")
-        except:
-            st.sidebar.error("No solvers available! The app may not work correctly.")
-    
-    st.sidebar.info(f"PuLP version: {pulp.__version__}")
-    
-except ImportError:
-    st.error("""
-    ### Error: PuLP library not found
-    
-    This application requires the PuLP optimization library, which is missing.
-    Please check the deployment configuration.
-    """)
-    st.stop()
+import sys
+import os
 
 # Rest of your imports
+import pulp
 import subprocess
 import pandas as pd
 import numpy as np
@@ -58,11 +28,18 @@ import matplotlib.pyplot as plt
 import atexit
 import shutil
 
-# Rest of your code remains the same...
 # App version - helpful for troubleshooting
 APP_VERSION = "1.0.0"
 
+# Display solver status in sidebar
+try:
+    solver = pulp.PULP_CBC_CMD()
+    st.sidebar.success(f"✅ PuLP {pulp.__version__} with CBC solver is ready")
+except Exception as e:
+    st.sidebar.error(f"❌ CBC solver issue: {str(e)}")
+    st.error("The CBC solver for PuLP optimization is not available. The application may not work correctly.")
 
+# Rest of your application code follows...
 
 # Helper functions - defined at the top so they're available throughout the file
 def choice_to_word(choice):
